@@ -45,16 +45,28 @@ fi
 
 # Check dependencies
 echo "Checking dependencies..."
-missing=""
-command -v gum &> /dev/null || missing="$missing gum"
-command -v fd &> /dev/null || missing="$missing fd"
-command -v curl &> /dev/null || missing="$missing curl"
+missing_deps=()
+command -v gum &> /dev/null || missing_deps+=("gum")
+command -v fd &> /dev/null || missing_deps+=("fd")
+command -v curl &> /dev/null || missing_deps+=("curl")
 
-if [ -n "$missing" ]; then
+if [ ${#missing_deps[@]} -gt 0 ]; then
     echo ""
-    echo "⚠️  Missing dependencies:$missing"
+    echo "⚠️  Missing dependencies: ${missing_deps[*]}"
     echo ""
-    echo "Install with: brew install$missing"
+    echo "Install with:"
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "  brew install ${missing_deps[*]}"
+    elif command -v apt &> /dev/null; then
+        echo "  sudo apt install ${missing_deps[*]/fd/fd-find}"
+    elif command -v dnf &> /dev/null; then
+        echo "  sudo dnf install ${missing_deps[*]}"
+    elif command -v pacman &> /dev/null; then
+        echo "  sudo pacman -S ${missing_deps[*]}"
+    else
+        echo "  brew install ${missing_deps[*]}  (macOS)"
+        echo "  apt install ${missing_deps[*]/fd/fd-find}   (Debian/Ubuntu)"
+    fi
 else
     echo "✅ All dependencies installed"
 fi
